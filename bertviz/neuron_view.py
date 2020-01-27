@@ -29,7 +29,7 @@ import os
 import torch
 from collections import defaultdict
 
-def show(model, model_type, tokenizer, sentence_a, sentence_b=None):
+def show(model, model_type, tokenizer, sentence_a, sentence_b=None, threshold=0.0):
     if sentence_b:
         vis_html = """
           <span style="user-select:none">
@@ -58,6 +58,13 @@ def show(model, model_type, tokenizer, sentence_a, sentence_b=None):
         os.path.join(os.getcwd(), os.path.dirname(__file__)))
     vis_js = open(os.path.join(__location__, 'neuron_view.js')).read()
     attn_data = get_attention(model, model_type, tokenizer, sentence_a, sentence_b, include_queries_and_keys=True)
+    # Set the value of any number below the threshold to 0
+    for i, dim1 in enumerate(attn_data['all']["attn"]):
+      for j, dim2 in enumerate(dim1):
+        for k, dim3 in enumerate(dim2):
+          for l, val in enumerate(dim3):
+            if val < threshold:
+              attn_data['all']["attn"][i][j][k][l] = 0.0
     if model_type == 'gpt2':
         bidirectional = False
     else:
