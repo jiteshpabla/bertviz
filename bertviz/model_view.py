@@ -3,7 +3,7 @@ from IPython.core.display import display, HTML, Javascript
 import os
 from .util import format_special_chars, format_attention
 
-def model_view(attention, tokens, sentence_b_start=None, prettify_tokens=True):
+def model_view(attention, tokens, sentence_b_start=None, prettify_tokens=True, threshold=0.0, cls_only = False):
     """Render model view
 
         Args:
@@ -75,6 +75,21 @@ def model_view(attention, tokens, sentence_b_start=None, prettify_tokens=True):
         'attention': attn_data,
         'default_filter': "all"
     }
+    params = {
+        'attention': attn_data,
+        'default_filter': "all"
+    }
+    # Set the value of any number below the threshold to 0
+    for i, dim1 in enumerate(attn_data['all']["attn"]):
+      for j, dim2 in enumerate(dim1):
+        for k, dim3 in enumerate(dim2):
+          for l, val in enumerate(dim3):
+            # To display CLS tokens only
+            if cls_only == True and l != 0:
+              attn_data['all']["attn"][i][j][k][l] = 0.0
+            if val < threshold:
+              attn_data['all']["attn"][i][j][k][l] = 0.0
+    
     attn_seq_len = len(attn_data['all']['attn'][0][0])
     if attn_seq_len != len(tokens):
         raise ValueError(f"Attention has {attn_seq_len} positions, while number of tokens is {len(tokens)}")
